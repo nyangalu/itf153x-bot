@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ITF153X Lecturer Dashboard – L Nyanga</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#f4f6fb;min-height:100vh;padding:16px;}
+.shell{width:100%;max-width:920px;margin:0 auto;background:#fff;border-radius:14px;box-shadow:0 2px 16px rgba(0,0,0,.10);overflow:hidden;}
+.hdr{background:#185FA5;padding:13px 20px;display:flex;align-items:center;gap:12px;}
+.hdr-av{width:38px;height:38px;border-radius:50%;background:#B5D4F4;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.hdr-t{font-size:15px;font-weight:700;color:#fff;}
+.hdr-s{font-size:11px;color:#B5D4F4;margin-top:1px;}
+.badge{background:#EAF3DE;color:#27500A;font-size:11px;padding:3px 10px;border-radius:20px;margin-left:auto;font-weight:700;}
+
+/* Setup */
+.setup{padding:32px 24px;display:none;flex-direction:column;align-items:center;gap:14px;}
+.setup.on{display:flex;}
+.setup-icon{font-size:40px;text-align:center;}
+.setup-h{font-size:16px;font-weight:700;color:#1a1a1a;}
+.setup-p{font-size:13px;color:#666;text-align:center;max-width:340px;line-height:1.6;}
+.setup-form{width:100%;max-width:360px;display:flex;flex-direction:column;gap:10px;}
+.flbl{font-size:11px;color:#555;font-weight:700;display:block;margin-bottom:3px;}
+.fi{width:100%;border:1px solid #d0d5dd;border-radius:8px;padding:9px 12px;font-size:13px;color:#1a1a1a;outline:none;font-family:inherit;}
+.fi:focus{border-color:#185FA5;box-shadow:0 0 0 3px rgba(24,95,165,.12);}
+.fi-mono{font-family:'Courier New',monospace;font-size:12px;letter-spacing:.4px;}
+.info-box{border-radius:8px;padding:11px 13px;font-size:11px;line-height:1.7;}
+.info-blue{background:#e6f1fb;border:1px solid #b5d4f4;color:#0c447c;}
+.info-yellow{background:#fffbea;border:1px solid #f0d080;color:#5a4500;}
+.info-green{background:#eaf3de;border:1px solid #c0dd97;color:#27500A;}
+.err{font-size:11px;color:#a32d2d;display:none;background:#fcebeb;border-radius:7px;padding:7px 10px;}
+.btn{background:#185FA5;color:#fff;border:none;border-radius:8px;padding:11px 20px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn:hover{background:#0C447C;}
+.btn-outline{background:transparent;color:#185FA5;border:1px solid #185FA5;border-radius:8px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-outline:hover{background:#e6f1fb;}
+.divider{border:none;border-top:1px solid #eef0f5;margin:4px 0;}
+.step-num{display:inline-block;width:20px;height:20px;border-radius:50%;background:#185FA5;color:#fff;font-size:10px;font-weight:700;text-align:center;line-height:20px;margin-right:6px;flex-shrink:0;}
+
+/* Dashboard */
+.dash{padding:18px 20px;display:none;flex-direction:column;gap:14px;}
+.dash.on{display:flex;}
+.dash-hdr{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.dash-ttl{font-size:15px;font-weight:700;color:#1a1a1a;}
+.dash-sub{font-size:12px;color:#888;margin-top:2px;}
+.top-btns{display:flex;gap:8px;flex-wrap:wrap;}
+.rfsh{font-size:12px;padding:6px 13px;border-radius:8px;border:1px solid #d0d5dd;background:#fff;color:#555;cursor:pointer;font-family:inherit;}
+.rfsh:hover{background:#f0f4fa;border-color:#185FA5;color:#185FA5;}
+.cfg-btn{font-size:12px;padding:6px 13px;border-radius:8px;border:1px solid #d0d5dd;background:#fff;color:#555;cursor:pointer;font-family:inherit;}
+.cfg-btn:hover{background:#f0f4fa;}
+
+/* Email config panel */
+.email-cfg{background:#f9fafb;border:1px solid #e5e9f2;border-radius:10px;padding:14px;display:none;flex-direction:column;gap:10px;}
+.email-cfg.on{display:flex;}
+.email-cfg-ttl{font-size:12px;font-weight:700;color:#1a1a1a;display:flex;align-items:center;justify-content:space-between;}
+.email-cfg-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.email-status{font-size:11px;padding:6px 10px;border-radius:7px;display:none;}
+.email-status.ok{background:#eaf3de;color:#27500A;display:block;}
+.email-status.err{background:#fcebeb;color:#791f1f;display:block;}
+
+/* Alert banner */
+.alert-banner{background:#fff3cd;border:1.5px solid #e6a817;border-radius:10px;padding:12px 15px;display:none;flex-direction:column;gap:8px;}
+.alert-banner.on{display:flex;}
+.alert-ttl{font-size:12px;font-weight:700;color:#7d4e00;display:flex;align-items:center;gap:6px;}
+.alert-sub{font-size:11px;color:#7d4e00;}
+.alert-list{display:flex;flex-direction:column;gap:6px;}
+.alert-item{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#fff;border:1px solid #f0d080;border-radius:8px;padding:9px 12px;flex-wrap:wrap;}
+.alert-item-name{font-size:12px;font-weight:700;color:#1a1a1a;}
+.alert-item-flags{display:flex;gap:4px;margin-top:3px;flex-wrap:wrap;}
+.resend-btn{font-size:11px;padding:4px 11px;border-radius:6px;border:1px solid #27500A;background:#eaf3de;color:#27500A;cursor:pointer;font-family:inherit;font-weight:700;white-space:nowrap;}
+.resend-btn:hover{background:#c0dd97;}
+
+/* Tabs */
+.tab-row{display:flex;border-bottom:2px solid #eef0f5;}
+.tab{padding:9px 18px;font-size:12px;font-weight:700;color:#888;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;font-family:inherit;background:none;border-top:none;border-left:none;border-right:none;}
+.tab.active{color:#185FA5;border-bottom-color:#185FA5;}
+.tab-panel{display:none;}
+.tab-panel.on{display:block;}
+
+/* Stats */
+.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:4px;}
+.sc{background:#f4f6fb;border-radius:10px;padding:12px 15px;}
+.sc-lbl{font-size:11px;color:#777;margin-bottom:4px;}
+.sc-val{font-size:24px;font-weight:700;color:#1a1a1a;}
+.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:4px;}
+.cc{background:#fff;border:1px solid #e5e9f2;border-radius:10px;padding:14px;}
+.cc-ttl{font-size:12px;font-weight:700;color:#1a1a1a;margin-bottom:6px;}
+.pills{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;}
+.pill{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:500;}
+
+/* Table */
+.tc{background:#fff;border:1px solid #e5e9f2;border-radius:10px;padding:14px;overflow-x:auto;margin-top:4px;}
+.tc-ttl{font-size:12px;font-weight:700;color:#1a1a1a;margin-bottom:10px;}
+.dt{width:100%;font-size:11px;border-collapse:collapse;min-width:560px;}
+.dt th{text-align:left;color:#888;font-weight:700;padding:7px 8px;border-bottom:2px solid #e5e9f2;white-space:nowrap;background:#f9fafb;}
+.dt td{padding:8px;border-bottom:1px solid #f0f2f7;color:#1a1a1a;vertical-align:middle;}
+.dt tr:last-child td{border-bottom:none;}
+.dt tr:hover td{background:#f9fafb;}
+.dt tr.flagged td{background:#fffdf0;}
+.view-btn{font-size:10px;padding:3px 9px;border-radius:6px;border:1px solid #185FA5;color:#185FA5;background:transparent;cursor:pointer;font-family:inherit;}
+.view-btn:hover{background:#E6F1FB;}
+
+/* Badges */
+.bdg{display:inline-block;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:700;}
+.bp{background:#EAF3DE;color:#27500A;}
+.bn{background:#F1EFE8;color:#5F5E5A;}
+.bg{background:#FCEBEB;color:#791F1F;}
+.bc{background:#E6F1FB;color:#0C447C;}
+.bx{background:#FAEEDA;color:#633806;}
+.bi{background:#FF6B00;color:#fff;}
+.ba{background:#C0392B;color:#fff;}
+
+/* Conversations */
+.conv-section{background:#fff;border:1px solid #e5e9f2;border-radius:10px;overflow:hidden;margin-top:6px;}
+.conv-hdr{padding:12px 14px;background:#f9fafb;border-bottom:1px solid #eef0f5;display:flex;align-items:center;gap:10px;cursor:pointer;}
+.conv-hdr:hover{background:#f0f4fa;}
+.conv-hdr.flagged-hdr{background:#fffdf0;border-left:4px solid #e6a817;}
+.scc-av{width:32px;height:32px;border-radius:50%;background:#E6F1FB;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.scc-info{flex:1;}
+.scc-name{font-size:13px;font-weight:700;color:#1a1a1a;}
+.scc-meta{font-size:11px;color:#888;margin-top:1px;}
+.scc-toggle{font-size:14px;color:#888;transition:transform .2s;flex-shrink:0;}
+.scc-toggle.open{transform:rotate(90deg);}
+.scc-body{display:none;padding:12px 14px;flex-direction:column;gap:7px;max-height:420px;overflow-y:auto;}
+.scc-body.open{display:flex;}
+.cmsg{display:flex;gap:7px;}
+.cmsg.student{flex-direction:row-reverse;}
+.cmsg-av{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;margin-top:2px;}
+.cmsg.bot .cmsg-av{background:#e6f1fb;}
+.cmsg.student .cmsg-av{background:#eaf3de;}
+.cmsg-wrap{max-width:82%;display:flex;flex-direction:column;gap:2px;}
+.cmsg.student .cmsg-wrap{align-items:flex-end;}
+.cmsg-bubble{padding:7px 10px;border-radius:10px;font-size:12px;line-height:1.55;}
+.cmsg.bot .cmsg-bubble{background:#f3f5f8;color:#1a1a1a;}
+.cmsg.student .cmsg-bubble{background:#185FA5;color:#fff;}
+.cmsg-meta{font-size:9px;color:#bbb;padding:0 3px;}
+.cmsg-topic{font-size:9px;padding:1px 6px;border-radius:20px;background:#E6F1FB;color:#185FA5;font-weight:700;}
+.no-conv{text-align:center;padding:20px;color:#aaa;font-size:12px;}
+.empty{text-align:center;padding:28px;color:#aaa;font-size:13px;}
+.ts{color:#888;font-size:10px;}
+.note{background:#f0f4fa;border:1px solid #c5d5ea;border-radius:8px;padding:11px 14px;font-size:11px;color:#444;line-height:1.7;}
+.note strong{color:#185FA5;}
+.reset-link{font-size:11px;color:#888;text-align:center;cursor:pointer;text-decoration:underline;margin-top:4px;}
+.reset-link:hover{color:#a32d2d;}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="hdr">
+    <div class="hdr-av">📊</div>
+    <div><div class="hdr-t">ITF153X Lecturer Dashboard</div><div class="hdr-s">Student engagement analytics · L Nyanga</div></div>
+    <div class="badge">🔒 Lecturer only</div>
+  </div>
+
+  <!-- Setup screen -->
+  <div class="setup" id="setup">
+    <div class="setup-icon">⚙️</div>
+    <div class="setup-h">Dashboard setup</div>
+    <div class="setup-p">Complete the two steps below to activate the dashboard and automatic student alert emails.</div>
+    <div class="setup-form">
+
+      <!-- Step 1: API Key -->
+      <div class="info-blue" style="font-weight:700;font-size:12px;padding:8px 12px;"><span class="step-num">1</span>Anthropic API Key</div>
+      <div><label class="flbl" for="apikey">API Key</label><input class="fi fi-mono" type="password" id="apikey" placeholder="sk-ant-..."></div>
+      <div class="info-yellow">🔒 Saved only on <strong>your browser</strong>. Never shared or uploaded.</div>
+
+      <hr class="divider">
+
+      <!-- Step 2: EmailJS -->
+      <div class="info-blue" style="font-weight:700;font-size:12px;padding:8px 12px;"><span class="step-num">2</span>EmailJS — Automatic email alerts</div>
+      <div class="info-yellow">
+        <strong>How to get these values (free, 5 minutes):</strong><br>
+        1. Go to <strong>emailjs.com</strong> and create a free account.<br>
+        2. Add an <strong>Email Service</strong> (connect your Gmail or Outlook) → copy the <em>Service ID</em>.<br>
+        3. Create an <strong>Email Template</strong> using the variables listed below → copy the <em>Template ID</em>.<br>
+        4. Go to <strong>Account → API Keys</strong> → copy your <em>Public Key</em>.<br><br>
+        <strong>Template variables to include:</strong><br>
+        <code style="font-size:10px;background:#fff;padding:2px 5px;border-radius:4px;display:block;margin-top:4px;line-height:2">
+          {{subject}} · {{lecturer_name}} · {{student_name}} · {{student_no}}<br>
+          {{flag_reason}} · {{sentiment}} · {{learning_state}}<br>
+          {{last_message}} · {{message_count}} · {{date_time}}
+        </code>
+      </div>
+
+      <div class="email-cfg-grid">
+        <div><label class="flbl" for="ej-service">EmailJS Service ID</label><input class="fi fi-mono" type="text" id="ej-service" placeholder="service_xxxxxxx"></div>
+        <div><label class="flbl" for="ej-template">Template ID</label><input class="fi fi-mono" type="text" id="ej-template" placeholder="template_xxxxxxx"></div>
+        <div><label class="flbl" for="ej-pubkey">Public Key</label><input class="fi fi-mono" type="text" id="ej-pubkey" placeholder="xxxxxxxxxxxxxxxxxxxx"></div>
+        <div><label class="flbl" for="ej-email">Your email address</label><input class="fi" type="email" id="ej-email" placeholder="nyangal@cput.ac.za" value="nyangal@cput.ac.za"></div>
+      </div>
+      <div class="info-green" style="font-size:11px;">✅ EmailJS is optional. Leave blank to skip automatic emails — you can always configure it later in the dashboard settings.</div>
+
+      <div class="err" id="setup-err">API key is required and must start with <strong>sk-ant-</strong></div>
+      <button class="btn" onclick="saveSetup()" style="width:100%">Activate dashboard</button>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div class="dash" id="dash">
+    <div class="dash-hdr">
+      <div><div class="dash-ttl">Student engagement overview</div><div class="dash-sub" id="last-updated">Loading…</div></div>
+      <div class="top-btns">
+        <button class="cfg-btn" onclick="toggleEmailCfg()">⚙ Email settings</button>
+        <button class="rfsh" onclick="loadDash()">↻ Refresh</button>
+      </div>
+    </div>
+
+    <!-- Email config panel (collapsible) -->
+    <div class="email-cfg" id="email-cfg">
+      <div class="email-cfg-ttl">
+        <span>EmailJS configuration</span>
+        <button class="btn-outline" onclick="toggleEmailCfg()">Close</button>
+      </div>
+      <div class="email-cfg-grid">
+        <div><label class="flbl" for="cfg-service">Service ID</label><input class="fi fi-mono" type="text" id="cfg-service" placeholder="service_xxxxxxx"></div>
+        <div><label class="flbl" for="cfg-template">Template ID</label><input class="fi fi-mono" type="text" id="cfg-template" placeholder="template_xxxxxxx"></div>
+        <div><label class="flbl" for="cfg-pubkey">Public Key</label><input class="fi fi-mono" type="text" id="cfg-pubkey" placeholder="xxxxxxxxxxxxxxxxxxxx"></div>
+        <div><label class="flbl" for="cfg-email">Lecturer email</label><input class="fi" type="email" id="cfg-email" placeholder="nyangal@cput.ac.za"></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <button class="btn" onclick="saveEmailCfg()" style="padding:8px 16px;font-size:12px;">Save email settings</button>
+        <button class="btn-outline" onclick="testEmail()">Send test email</button>
+        <div class="email-status" id="email-status"></div>
+      </div>
+    </div>
+
+    <!-- Alert banner -->
+    <div class="alert-banner" id="alert-banner">
+      <div class="alert-ttl">🚨 Students requiring immediate attention</div>
+      <div class="alert-sub" id="alert-sub"></div>
+      <div class="alert-list" id="alert-list"></div>
+    </div>
+
+    <div class="tab-row">
+      <button class="tab active" onclick="switchTab('analytics',this)">📊 Analytics</button>
+      <button class="tab" onclick="switchTab('table',this)">📋 Records</button>
+      <button class="tab" onclick="switchTab('conversations',this)">💬 Conversations</button>
+    </div>
+
+    <div class="tab-panel on" id="tab-analytics">
+      <div class="sg">
+        <div class="sc"><div class="sc-lbl">Total students</div><div class="sc-val" id="d-tot">—</div></div>
+        <div class="sc"><div class="sc-lbl">Total messages</div><div class="sc-val" id="d-msg">—</div></div>
+        <div class="sc"><div class="sc-lbl">Avg messages / student</div><div class="sc-val" id="d-avg">—</div></div>
+        <div class="sc"><div class="sc-lbl">Top sentiment</div><div class="sc-val" id="d-top" style="font-size:14px;padding-top:6px">—</div></div>
+      </div>
+      <div class="charts">
+        <div class="cc">
+          <div class="cc-ttl">Sentiment distribution</div>
+          <div class="pills" id="sent-pills"></div>
+          <div style="height:130px;position:relative"><canvas id="sentChart"></canvas></div>
+        </div>
+        <div class="cc">
+          <div class="cc-ttl">Learning state distribution</div>
+          <div class="pills" id="learn-pills"></div>
+          <div style="height:130px;position:relative"><canvas id="learnChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-table">
+      <div class="tc">
+        <div class="tc-ttl">Individual student records</div>
+        <table class="dt">
+          <thead><tr><th>Student no.</th><th>Name</th><th>Messages</th><th>Sentiment</th><th>Learning</th><th>Consented</th><th>Last active</th><th>Action</th></tr></thead>
+          <tbody id="stbl"><tr><td colspan="8" class="empty">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-conversations">
+      <div id="conv-panel"><div class="empty">Loading conversations…</div></div>
+    </div>
+
+    <div class="note">
+      <strong>📌 Note on data:</strong> Student data is read from localStorage on the same browser/device. For cross-device access, host both files on the same web server or Blackboard domain.<br><br>
+      <strong>📧 Automatic emails:</strong> When a student is flagged as <em>Inappropriate</em> or <em>Attention Needed</em>, the system sends an email to your inbox automatically via EmailJS — no Outlook or action required. Configure EmailJS credentials in <em>⚙ Email settings</em> above.
+    </div>
+    <div class="reset-link" onclick="resetAll()">Reset API key &amp; settings</div>
+  </div>
+</div>
+
+<script>
+const SK='itf153x_students', KK='itf153x_apikey', EK='itf153x_emailjs';
+let charts={}, allStudents=[];
+
+function getKey(){return localStorage.getItem(KK)||'';}
+function getEmailCfg(){try{return JSON.parse(localStorage.getItem(EK)||'null');}catch(e){return null;}}
+function loadAll(){try{return JSON.parse(localStorage.getItem(SK)||'[]');}catch(e){return[];}}
+
+function saveSetup(){
+  const k=document.getElementById('apikey').value.trim();
+  if(!k.startsWith('sk-ant-')){document.getElementById('setup-err').style.display='block';return;}
+  localStorage.setItem(KK,k);
+  saveEmailCfgFrom('ej-service','ej-template','ej-pubkey','ej-email');
+  init();
+}
+
+function saveEmailCfg(){
+  saveEmailCfgFrom('cfg-service','cfg-template','cfg-pubkey','cfg-email');
+  const st=document.getElementById('email-status');
+  st.textContent='✅ Email settings saved.';st.className='email-status ok';
+  setTimeout(()=>{st.className='email-status';},3000);
+}
+
+function saveEmailCfgFrom(sId,tId,pkId,emId){
+  const cfg={
+    serviceId:document.getElementById(sId).value.trim(),
+    templateId:document.getElementById(tId).value.trim(),
+    publicKey:document.getElementById(pkId).value.trim(),
+    lecturerEmail:document.getElementById(emId).value.trim()
+  };
+  if(cfg.serviceId&&cfg.templateId&&cfg.publicKey)localStorage.setItem(EK,JSON.stringify(cfg));
+}
+
+function loadEmailCfgIntoPanel(){
+  const cfg=getEmailCfg();if(!cfg)return;
+  document.getElementById('cfg-service').value=cfg.serviceId||'';
+  document.getElementById('cfg-template').value=cfg.templateId||'';
+  document.getElementById('cfg-pubkey').value=cfg.publicKey||'';
+  document.getElementById('cfg-email').value=cfg.lecturerEmail||'';
+}
+
+function toggleEmailCfg(){
+  const p=document.getElementById('email-cfg');
+  const on=p.classList.toggle('on');
+  if(on)loadEmailCfgIntoPanel();
+}
+
+async function testEmail(){
+  const cfg=getEmailCfg();
+  const st=document.getElementById('email-status');
+  if(!cfg||!cfg.serviceId||!cfg.templateId||!cfg.publicKey){
+    st.textContent='⚠ Please save EmailJS settings first.';st.className='email-status err';return;
+  }
+  st.textContent='Sending test email…';st.className='email-status ok';
+  try{
+    emailjs.init(cfg.publicKey);
+    await emailjs.send(cfg.serviceId,cfg.templateId,{
+      lecturer_name:'L Nyanga',
+      lecturer_email:cfg.lecturerEmail,
+      student_name:'Test Student',
+      student_no:'000000000',
+      flag_reason:'TEST — Email configuration check',
+      sentiment:'neutral',
+      learning_state:'neutral',
+      last_message:'This is a test message.',
+      message_count:'0',
+      date_time:new Date().toLocaleString('en-ZA'),
+      subject:'[ITF153X] Test email — configuration check'
+    });
+    st.textContent='✅ Test email sent! Check your inbox.';st.className='email-status ok';
+  }catch(err){
+    st.textContent='❌ Failed: '+( err.text||JSON.stringify(err));st.className='email-status err';
+  }
+}
+
+async function sendAlertEmail(s){
+  const cfg=getEmailCfg();
+  if(!cfg||!cfg.serviceId||!cfg.templateId||!cfg.publicKey)return;
+  const reasons=[];
+  if(s.sentiment==='inappropriate')reasons.push('INAPPROPRIATE RESPONSE DETECTED');
+  if(s.learning==='attention_needed')reasons.push('AGENT ATTENTION NEEDED');
+  const lastMsg=(s.conversation||[]).filter(m=>m.role==='student').slice(-1)[0]?.text||'(none)';
+  try{
+    emailjs.init(cfg.publicKey);
+    await emailjs.send(cfg.serviceId,cfg.templateId,{
+      lecturer_name:'L Nyanga',
+      lecturer_email:cfg.lecturerEmail||'nyangal@cput.ac.za',
+      student_name:s.name,
+      student_no:s.no,
+      flag_reason:reasons.join(' | '),
+      sentiment:s.sentiment,
+      learning_state:s.learning,
+      last_message:lastMsg,
+      message_count:String(s.messageCount||0),
+      date_time:new Date().toLocaleString('en-ZA'),
+      subject:'[ITF153X ALERT] Student requires attention — '+s.name+' ('+s.no+')'
+    });
+  }catch(err){console.error('EmailJS error:',err);}
+}
+
+function resetAll(){if(confirm('Reset all settings?')){[KK,EK].forEach(k=>localStorage.removeItem(k));document.getElementById('dash').className='dash';document.getElementById('setup').className='setup on';}}
+
+function sBdg(s){const m={positive:['bp','✔ Positive'],neutral:['bn','– Neutral'],negative:['bg','✖ Negative'],inappropriate:['bi','⚠ Inappropriate']};const[c,l]=m[s]||m.neutral;return'<span class="bdg '+c+'">'+l+'</span>';}
+function lBdg(l){const m={curious:['bc','🔍 Curious'],neutral:['bn','– Neutral'],confused:['bx','? Confused'],attention_needed:['ba','🚨 Attention Needed']};const[c,lb]=m[l]||m.neutral;return'<span class="bdg '+c+'">'+lb+'</span>';}
+function fdt(iso){if(!iso)return'—';const d=new Date(iso);return d.toLocaleDateString('en-ZA',{day:'2-digit',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('en-ZA',{hour:'2-digit',minute:'2-digit'});}
+function ftm(iso){if(!iso)return'';return new Date(iso).toLocaleTimeString('en-ZA',{hour:'2-digit',minute:'2-digit'});}
+function isFlagged(s){return s.sentiment==='inappropriate'||s.learning==='attention_needed';}
+
+function switchTab(id,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('on'));
+  el.classList.add('active');document.getElementById('tab-'+id).classList.add('on');
+}
+
+function mkChart(id,key,labels,data,bgs,borders){
+  const el=document.getElementById(id);if(!el)return;
+  if(charts[key])charts[key].destroy();
+  charts[key]=new Chart(el.getContext('2d'),{type:'bar',
+    data:{labels,datasets:[{data,backgroundColor:bgs,borderColor:borders,borderWidth:1,borderRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(28,28,28,.9)',cornerRadius:6,padding:9}},
+      scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:10},color:'#888'},grid:{color:'rgba(0,0,0,.05)'},border:{display:false}},
+        x:{ticks:{font:{size:10},color:'#888'},grid:{display:false},border:{display:false}}}}});
+}
+
+function loadDash(){
+  allStudents=loadAll();
+  const tot=allStudents.length,totM=allStudents.reduce((s,x)=>s+(x.messageCount||0),0);
+  const avg=tot?(totM/tot).toFixed(1):'0';
+  const sc={positive:0,neutral:0,negative:0,inappropriate:0};
+  const lc={curious:0,neutral:0,confused:0,attention_needed:0};
+  allStudents.forEach(s=>{
+    sc[s.sentiment||'neutral']=(sc[s.sentiment||'neutral']||0)+1;
+    lc[s.learning||'neutral']=(lc[s.learning||'neutral']||0)+1;
+  });
+  document.getElementById('d-tot').textContent=tot;
+  document.getElementById('d-msg').textContent=totM;
+  document.getElementById('d-avg').textContent=avg;
+  const topS=tot?Object.entries(sc).filter(e=>e[1]>0).sort((a,b)=>b[1]-a[1])[0][0]:'neutral';
+  document.getElementById('d-top').innerHTML=sBdg(topS);
+  document.getElementById('last-updated').textContent='Last refreshed: '+new Date().toLocaleTimeString('en-ZA',{hour:'2-digit',minute:'2-digit'});
+
+  document.getElementById('sent-pills').innerHTML=
+    '<span class="pill bp">Positive: '+sc.positive+'</span>'+
+    '<span class="pill bn">Neutral: '+sc.neutral+'</span>'+
+    '<span class="pill bg">Negative: '+sc.negative+'</span>'+
+    '<span class="pill" style="background:#FF6B00;color:#fff">Inappropriate: '+sc.inappropriate+'</span>';
+  document.getElementById('learn-pills').innerHTML=
+    '<span class="pill bc">Curious: '+lc.curious+'</span>'+
+    '<span class="pill bn">Neutral: '+lc.neutral+'</span>'+
+    '<span class="pill bx">Confused: '+lc.confused+'</span>'+
+    '<span class="pill" style="background:#C0392B;color:#fff">Attention Needed: '+lc.attention_needed+'</span>';
+
+  mkChart('sentChart','sent',['Positive','Neutral','Negative','Inappropriate'],
+    [sc.positive,sc.neutral,sc.negative,sc.inappropriate],
+    ['#C0DD97','#D3D1C7','#F09595','#FF6B00'],['#3B6D11','#5F5E5A','#A32D2D','#B34E00']);
+  mkChart('learnChart','learn',['Curious','Neutral','Confused','Attn. Needed'],
+    [lc.curious,lc.neutral,lc.confused,lc.attention_needed],
+    ['#B5D4F4','#D3D1C7','#FAC775','#C0392B'],['#185FA5','#5F5E5A','#BA7517','#922B21']);
+
+  // Alert banner
+  const flagged=allStudents.filter(isFlagged);
+  const banner=document.getElementById('alert-banner');
+  const cfg=getEmailCfg();
+  const emailActive=cfg&&cfg.serviceId&&cfg.templateId&&cfg.publicKey;
+  if(flagged.length){
+    banner.classList.add('on');
+    document.getElementById('alert-sub').textContent=emailActive
+      ?'Alert emails have been automatically sent to '+( cfg.lecturerEmail||'your inbox')+'.'
+      :'⚠ Email alerts not configured. Go to ⚙ Email settings to enable automatic notifications.';
+    document.getElementById('alert-list').innerHTML=flagged.map(s=>{
+      const reasons=[];
+      if(s.sentiment==='inappropriate')reasons.push('<span class="bdg bi">⚠ Inappropriate</span>');
+      if(s.learning==='attention_needed')reasons.push('<span class="bdg ba">🚨 Attention Needed</span>');
+      return '<div class="alert-item">'
+        +'<div><div class="alert-item-name">'+s.name+' <span class="ts">· '+s.no+'</span></div>'
+        +'<div class="alert-item-flags">'+reasons.join('')+'</div></div>'
+        +'<div style="display:flex;gap:6px;flex-wrap:wrap">'
+          +'<button class="view-btn" onclick="jumpToConv(\''+s.no+'\')">View chat</button>'
+          +(emailActive?'<button class="resend-btn" onclick="sendAlertEmail(allStudents.find(x=>x.no===\''+s.no+'\'))">✉ Resend email</button>':'')
+        +'</div>'
+        +'</div>';
+    }).join('');
+  } else {
+    banner.classList.remove('on');
+  }
+
+  // Records table
+  const tbody=document.getElementById('stbl');
+  tbody.innerHTML=allStudents.length
+    ?[...allStudents].sort((a,b)=>(b.messageCount||0)-(a.messageCount||0)).map(s=>
+      '<tr class="'+(isFlagged(s)?'flagged':'')+'">'
+        +'<td class="ts">'+s.no+'</td>'
+        +'<td><strong>'+s.name+'</strong></td>'
+        +'<td style="text-align:center;font-weight:700">'+(s.messageCount||0)+'</td>'
+        +'<td>'+sBdg(s.sentiment||'neutral')+'</td>'
+        +'<td>'+lBdg(s.learning||'neutral')+'</td>'
+        +'<td style="text-align:center">'+(s.consented?'<span class="bdg bp">Yes</span>':'<span class="bdg bg">No</span>')+'</td>'
+        +'<td class="ts" style="white-space:nowrap">'+fdt(s.lastActive)+'</td>'
+        +'<td><button class="view-btn" onclick="jumpToConv(\''+s.no+'\')">View chat</button></td>'
+        +'</tr>').join('')
+    :'<tr><td colspan="8" class="empty">No student data yet.</td></tr>';
+
+  // Conversations panel
+  const panel=document.getElementById('conv-panel');
+  if(!allStudents.length){panel.innerHTML='<div class="empty">No student data yet.</div>';return;}
+  panel.innerHTML=[...allStudents].sort((a,b)=>(b.messageCount||0)-(a.messageCount||0)).map(s=>{
+    const conv=s.conversation||[],flag=isFlagged(s),mc=s.messageCount||0;
+    const msgs=conv.map(m=>{
+      const isS=m.role==='student',role=isS?'student':'bot',av=isS?'👤':'🎓';
+      const safe=(m.text||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const topicBdg=m.topic?'<span class="cmsg-topic">'+m.topic+'</span>':'';
+      return '<div class="cmsg '+role+'"><div class="cmsg-av">'+av+'</div><div class="cmsg-wrap">'
+        +(isS?'<div style="display:flex;gap:4px;margin-bottom:2px;">'+topicBdg+'</div>':'')
+        +'<div class="cmsg-bubble">'+safe+'</div>'
+        +'<div class="cmsg-meta">'+ftm(m.time)+'</div>'
+        +'</div></div>';
+    }).join('');
+    return '<div class="conv-section" id="conv-'+s.no+'">'
+      +'<div class="conv-hdr'+(flag?' flagged-hdr':'')+'" onclick="toggleConv(\''+s.no+'\')">'
+        +'<div class="scc-av">👤</div>'
+        +'<div class="scc-info"><div class="scc-name">'+s.name+' <span class="ts">· '+s.no+'</span></div>'
+          +'<div class="scc-meta">'+mc+' message'+(mc!==1?'s':'')+' · Last active: '+fdt(s.lastActive)+'</div></div>'
+        +'<div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">'+sBdg(s.sentiment||'neutral')+' '+lBdg(s.learning||'neutral')+'</div>'
+        +'<div class="scc-toggle" id="tog-'+s.no+'">▶</div>'
+      +'</div>'
+      +'<div class="scc-body" id="body-'+s.no+'">'+(msgs||'<div class="no-conv">No messages recorded.</div>')+'</div>'
+      +'</div>';
+  }).join('');
+}
+
+function toggleConv(no){
+  const b=document.getElementById('body-'+no),t=document.getElementById('tog-'+no);
+  const open=b.classList.toggle('open');t.classList.toggle('open',open);
+}
+function jumpToConv(no){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('on'));
+  document.querySelector('[onclick*="conversations"]').classList.add('active');
+  document.getElementById('tab-conversations').classList.add('on');
+  setTimeout(()=>{
+    const b=document.getElementById('body-'+no),t=document.getElementById('tog-'+no);
+    if(b&&!b.classList.contains('open')){b.classList.add('open');t.classList.add('open');}
+    document.getElementById('conv-'+no)?.scrollIntoView({behavior:'smooth',block:'start'});
+  },100);
+}
+
+function init(){document.getElementById('setup').className='setup';document.getElementById('dash').className='dash on';loadDash();}
+window.onload=function(){if(getKey()){init();}else{document.getElementById('setup').className='setup on';}};
+</script>
+</body>
+</html>
