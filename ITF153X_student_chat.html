@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ITF153X Study Assistant</title>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f4fb;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:14px;}
+.shell{width:100%;max-width:520px;background:#fff;border-radius:14px;box-shadow:0 2px 18px rgba(0,0,0,.11);overflow:hidden;display:flex;flex-direction:column;min-height:95vh;}
+.hdr{background:#185FA5;padding:12px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.hdr-av{width:36px;height:36px;border-radius:50%;background:#B5D4F4;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.hdr-t{font-size:14px;font-weight:700;color:#fff;}
+.hdr-s{font-size:11px;color:#B5D4F4;margin-top:1px;}
+.odot{width:8px;height:8px;border-radius:50%;background:#5DCAA5;margin-left:auto;}
+.screen{flex:1;display:none;flex-direction:column;align-items:center;justify-content:center;padding:22px;gap:13px;}
+.screen.on{display:flex;}
+.icon{font-size:40px;text-align:center;}
+.sh{font-size:16px;font-weight:700;color:#1a1a1a;text-align:center;}
+.sp{font-size:12px;color:#666;text-align:center;line-height:1.6;max-width:285px;}
+.form{width:100%;max-width:285px;display:flex;flex-direction:column;gap:9px;}
+.lb{font-size:11px;color:#555;font-weight:700;display:block;margin-bottom:3px;}
+.fi{width:100%;border:1px solid #d0d5dd;border-radius:8px;padding:8px 12px;font-size:13px;color:#1a1a1a;outline:none;font-family:inherit;}
+.fi:focus{border-color:#185FA5;box-shadow:0 0 0 3px rgba(24,95,165,.12);}
+.fi-mono{font-family:'Courier New',monospace;font-size:12px;letter-spacing:.4px;}
+.key-note{background:#fffbea;border:1px solid #f0d080;border-radius:8px;padding:9px 12px;font-size:11px;color:#5a4500;line-height:1.6;}
+.cb-box{display:flex;align-items:flex-start;gap:8px;background:#f0f4fa;border:1px solid #c5d5ea;border-radius:8px;padding:10px 12px;cursor:pointer;}
+.cb-box input{width:14px;height:14px;margin-top:2px;flex-shrink:0;accent-color:#185FA5;cursor:pointer;}
+.cb-lbl{font-size:12px;color:#444;line-height:1.55;}
+.cb-lbl strong{color:#185FA5;}
+.err{font-size:11px;color:#a32d2d;background:#fcebeb;border-radius:7px;padding:6px 10px;display:none;}
+.btn{background:#185FA5;color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;width:100%;font-family:inherit;}
+.btn:hover{background:#0C447C;}
+.btn:disabled{background:#c0c8d8;color:#7a8090;cursor:not-allowed;}
+.chat{display:none;flex:1;flex-direction:column;overflow:hidden;}
+.chat.on{display:flex;}
+.sbar{padding:5px 14px;background:#f0f4fa;border-bottom:1px solid #e5e9f2;font-size:11px;color:#555;display:flex;align-items:center;gap:5px;flex-shrink:0;}
+.tbar{padding:5px 9px;border-bottom:1px solid #eef0f5;display:flex;gap:4px;flex-wrap:wrap;flex-shrink:0;}
+.tb{font-size:10px;padding:3px 8px;border-radius:20px;border:1px solid #d0d5dd;background:#fff;color:#555;cursor:pointer;font-family:inherit;}
+.tb.on{background:#185FA5;color:#fff;border-color:#185FA5;}
+.msgs{flex:1;overflow-y:auto;padding:11px;display:flex;flex-direction:column;gap:8px;}
+.msg{display:flex;gap:6px;}
+.msg.u{flex-direction:row-reverse;}
+.av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.msg.b .av{background:#e6f1fb;}
+.msg.u .av{background:#eaf3de;}
+.bub{max-width:84%;padding:8px 11px;border-radius:12px;font-size:13px;line-height:1.55;}
+.msg.b .bub{background:#f3f5f8;color:#1a1a1a;border-bottom-left-radius:3px;}
+.msg.u .bub{background:#185FA5;color:#fff;border-bottom-right-radius:3px;}
+.dots{display:flex;gap:4px;padding:3px 0;}
+.dots span{width:6px;height:6px;border-radius:50%;background:#185FA5;animation:bop 1.2s infinite;}
+.dots span:nth-child(2){animation-delay:.2s;}
+.dots span:nth-child(3){animation-delay:.4s;}
+@keyframes bop{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+.api-err{margin:4px 11px;padding:7px 10px;background:#fcebeb;border:1px solid #f09595;border-radius:8px;font-size:11px;color:#791f1f;display:none;line-height:1.5;}
+.irow{padding:8px 11px;border-top:1px solid #eef0f5;display:flex;gap:6px;flex-shrink:0;background:#fff;}
+.irow textarea{flex:1;resize:none;border:1px solid #d0d5dd;border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit;height:36px;max-height:90px;outline:none;color:#1a1a1a;}
+.irow textarea:focus{border-color:#185FA5;}
+.snd{width:36px;height:36px;border-radius:8px;background:#185FA5;border:none;color:#fff;cursor:pointer;font-size:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.snd:hover{background:#0C447C;}
+.snd:disabled{background:#c0c8d8;cursor:not-allowed;}
+.disc{font-size:10px;color:#aaa;text-align:center;padding:3px 11px 7px;background:#fff;}
+.lang-bar{padding:3px 11px;background:#f0f4fa;border-bottom:1px solid #eef0f5;font-size:10px;color:#888;text-align:center;flex-shrink:0;}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="hdr">
+    <div class="hdr-av">🎓</div>
+    <div><div class="hdr-t">ITF153X Study Assistant</div><div class="hdr-s">Industrial Engineering · CPUT · L Nyanga</div></div>
+    <div class="odot"></div>
+  </div>
+
+  <!-- API key setup -->
+  <div class="screen" id="sc-key">
+    <div class="icon">🔑</div>
+    <div class="sh">One-time setup</div>
+    <div class="sp">Ask your lecturer for the API key to activate the Study Assistant. You only enter this once.</div>
+    <div class="form">
+      <div><label class="lb" for="apikey">API Key</label><input class="fi fi-mono" type="password" id="apikey" placeholder="sk-ant-..."></div>
+      <div class="key-note">🔒 Saved only on <strong>your device</strong>. Never shared or uploaded.</div>
+      <div class="err" id="kerr">Invalid key — must start with <strong>sk-ant-</strong></div>
+      <button class="btn" onclick="saveKey()">Save and continue</button>
+    </div>
+  </div>
+
+  <!-- Login -->
+  <div class="screen" id="sc-login">
+    <div class="icon">💻</div>
+    <div class="sh">Welcome to ITF153X</div>
+    <div class="sp">Enter your details to start your guided study session. You may ask in <strong>any language</strong>.</div>
+    <div class="form">
+      <div><label class="lb" for="sno">Student number</label><input class="fi" type="text" id="sno" placeholder="e.g. 222123456"></div>
+      <div><label class="lb" for="sname">Full name</label><input class="fi" type="text" id="sname" placeholder="e.g. Thandi Dlamini"></div>
+      <label class="cb-box">
+        <input type="checkbox" id="cons" onchange="toggleGo()">
+        <span class="cb-lbl">I consent to <strong>L Nyanga</strong> tracking my chat engagement — including message count, sentiment, learning progress, and conversation history — for teaching and support purposes.</span>
+      </label>
+      <div class="err" id="lerr">Please tick the consent checkbox to continue.</div>
+      <button class="btn" id="gobtn" onclick="startSession()" disabled>Start study session</button>
+    </div>
+  </div>
+
+  <!-- Chat -->
+  <div class="chat" id="chat">
+    <div class="sbar" id="sbar"></div>
+    <div class="lang-bar">🌍 Ask in any language — I will reply in your language</div>
+    <div class="tbar">
+      <button class="tb on" onclick="setT('General',this)">General</button>
+      <button class="tb" onclick="setT('MS Word',this)">MS Word</button>
+      <button class="tb" onclick="setT('MS Excel',this)">MS Excel</button>
+      <button class="tb" onclick="setT('PowerPoint',this)">PowerPoint</button>
+      <button class="tb" onclick="setT('MS Project',this)">MS Project</button>
+      <button class="tb" onclick="setT('Python',this)">Python</button>
+      <button class="tb" onclick="setT('VBA',this)">VBA</button>
+    </div>
+    <div class="msgs" id="msgs"></div>
+    <div class="api-err" id="apierr"></div>
+    <div class="irow">
+      <textarea id="inp" placeholder="Type your question in any language…" onkeydown="hk(event)" oninput="asz(this)"></textarea>
+      <button class="snd" id="sndbtn" onclick="send()" title="Send">&#10148;</button>
+    </div>
+    <div class="disc">This bot guides your learning — it will not complete assignments for you.</div>
+  </div>
+</div>
+
+<script>
+const SK='itf153x_students', KK='itf153x_apikey', EK='itf153x_emailjs';
+let student=null, topic='General', hist=[], busy=false;
+
+const SYS=`You are the ITF153X Study Assistant for CPUT Industrial Engineering. Lecturer: L Nyanga.
+Topics: MS Word, MS Excel, PowerPoint, MS Project, Python, VBA, Programming.
+Assessments: T1 MS Word due 13 Mar; T2 MS Excel due 11 May; T3 Online test; T4 Programming 31 Aug; T5 Project 1 Oct. Pass=50%.
+RULES:
+1. NEVER give direct answers to assignment or workbook questions — guide step-by-step only.
+2. Max 50 words per reply.
+3. End every reply with ONE guiding question.
+4. Positive feedback ONLY when student is correct.
+5. If unsure: "I am not sure of the answer. Please make an appointment with the lecturer or demi."
+6. Precise terms: cell reference, formula bar, ribbon, Quick Access Toolbar, syntax, loop, variable.
+7. Describe exact click locations. Default to Microsoft 365.
+LANGUAGE: Detect and respond in the student's exact language. Support ALL languages (isiXhosa not Zulu, Afrikaans not Dutch, Sesotho not seTswana/sePedi).`;
+
+const ANLZ=`Analyze these student messages. Return ONLY valid JSON, no markdown:
+{"sentiment":"positive|neutral|negative|inappropriate","learning":"curious|neutral|confused|attention_needed"}
+sentiment: positive=engaged; neutral=matter-of-fact; negative=frustrated/giving up; inappropriate=offensive/abusive/misusing bot.
+learning: curious=exploring; neutral=following steps; confused=repeating/struggling; attention_needed=severely lost/distressed/needs human.
+Messages:\n`;
+
+function getKey(){return localStorage.getItem(KK)||'';}
+function getEmailCfg(){try{return JSON.parse(localStorage.getItem(EK)||'null');}catch(e){return null;}}
+function loadAll(){try{return JSON.parse(localStorage.getItem(SK)||'[]');}catch(e){return[];}}
+function saveStudent(s){try{const a=loadAll(),i=a.findIndex(x=>x.no===s.no);if(i>=0)a[i]=s;else a.push(s);localStorage.setItem(SK,JSON.stringify(a));}catch(e){}}
+
+function showScreen(id){
+  ['sc-key','sc-login','chat'].forEach(s=>{const el=document.getElementById(s);if(!el)return;el.style.display='none';el.classList.remove('on');});
+  const el=document.getElementById(id);if(!el)return;el.style.display='';el.classList.add('on');
+}
+window.onload=function(){showScreen(getKey()?'sc-login':'sc-key');};
+
+function saveKey(){
+  const k=document.getElementById('apikey').value.trim();
+  if(!k.startsWith('sk-ant-')){document.getElementById('kerr').style.display='block';return;}
+  localStorage.setItem(KK,k);showScreen('sc-login');
+}
+function toggleGo(){document.getElementById('gobtn').disabled=!document.getElementById('cons').checked;document.getElementById('lerr').style.display='none';}
+
+function startSession(){
+  if(!document.getElementById('cons').checked){document.getElementById('lerr').style.display='block';return;}
+  const no=document.getElementById('sno').value.trim(),name=document.getElementById('sname').value.trim();
+  if(!no||!name){alert('Please enter both your student number and full name.');return;}
+  const all=loadAll(),ex=all.find(s=>s.no===no);
+  student=ex?{...ex,name,conversation:ex.conversation||[]}:{no,name,messageCount:0,sentiment:'neutral',learning:'neutral',lastActive:null,consented:true,conversation:[]};
+  showScreen('chat');
+  document.getElementById('sbar').innerHTML='👤 <strong>'+name+'</strong> &nbsp;·&nbsp; '+no;
+  const w='Welcome, '+name+'! 👋 Pick a topic above and ask in any language. I am here to guide you — not give you the answers!<br><br>What are you working on today?';
+  addBot(w);
+  student.conversation.push({role:'bot',text:w,topic:'General',time:new Date().toISOString()});
+  saveStudent(student);
+}
+
+function setT(t,el){topic=t;document.querySelectorAll('.tb').forEach(b=>b.classList.remove('on'));el.classList.add('on');}
+function asz(el){el.style.height='36px';el.style.height=Math.min(el.scrollHeight,90)+'px';}
+function hk(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}
+
+function addMsg(role,html){
+  const m=document.getElementById('msgs'),d=document.createElement('div');
+  d.className='msg '+role;
+  d.innerHTML=role==='b'?'<div class="av">🎓</div><div class="bub">'+html+'</div>':'<div class="bub">'+html+'</div><div class="av">👤</div>';
+  m.appendChild(d);m.scrollTop=m.scrollHeight;
+}
+function addBot(h){addMsg('b',h);}
+function showLoad(){const m=document.getElementById('msgs'),d=document.createElement('div');d.id='ldg';d.className='msg b';d.innerHTML='<div class="av">🎓</div><div class="bub"><div class="dots"><span></span><span></span><span></span></div></div>';m.appendChild(d);m.scrollTop=m.scrollHeight;}
+function rmLoad(){const e=document.getElementById('ldg');if(e)e.remove();}
+function showErr(msg){const el=document.getElementById('apierr');el.textContent='⚠ '+msg;el.style.display='block';}
+function hideErr(){document.getElementById('apierr').style.display='none';}
+
+async function callAPI(messages,maxT,useSystem){
+  const body={model:'claude-sonnet-4-6',max_tokens:maxT,messages};
+  if(useSystem)body.system=SYS;
+  const res=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':getKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify(body)
+  });
+  if(!res.ok){const t=await res.text();let m=t;try{m=JSON.parse(t).error?.message||t;}catch(e){}throw new Error(m);}
+  return res.json();
+}
+
+async function send(){
+  if(busy||!student)return;
+  const inp=document.getElementById('inp'),text=inp.value.trim();
+  if(!text)return;
+  inp.value='';inp.style.height='36px';hideErr();
+  addMsg('u',text.replace(/</g,'&lt;').replace(/>/g,'&gt;'));
+  hist.push({role:'user',content:'[Topic: '+topic+'] '+text});
+  student.conversation=student.conversation||[];
+  student.conversation.push({role:'student',text,topic,time:new Date().toISOString()});
+  busy=true;document.getElementById('sndbtn').disabled=true;showLoad();
+  try{
+    const data=await callAPI(hist,1000,true);
+    const reply=(data.content||[]).map(b=>b.type==='text'?b.text:'').join('');
+    if(!reply)throw new Error('Empty response. Please try again.');
+    rmLoad();
+    addBot(reply.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>'));
+    hist.push({role:'assistant',content:reply});
+    if(hist.length>20)hist=hist.slice(-20);
+    student.conversation.push({role:'bot',text:reply,topic,time:new Date().toISOString()});
+    student.messageCount=(student.messageCount||0)+1;
+    student.lastActive=new Date().toISOString();
+    analyze();
+  }catch(err){rmLoad();showErr(err.message||'Could not reach the assistant. Try again.');}
+  busy=false;document.getElementById('sndbtn').disabled=false;
+}
+
+async function analyze(){
+  const msgs=hist.filter(m=>m.role==='user').map(m=>m.content).join('\n');
+  try{
+    const data=await callAPI([{role:'user',content:ANLZ+msgs}],100,false);
+    const txt=(data.content||[]).map(b=>b.text||'').join('').trim().replace(/```json|```/g,'').trim();
+    const p=JSON.parse(txt);
+    const prevS=student.sentiment, prevL=student.learning;
+    if(['positive','neutral','negative','inappropriate'].includes(p.sentiment))student.sentiment=p.sentiment;
+    if(['curious','neutral','confused','attention_needed'].includes(p.learning))student.learning=p.learning;
+    const newFlag=(student.sentiment==='inappropriate'&&prevS!=='inappropriate')||(student.learning==='attention_needed'&&prevL!=='attention_needed');
+    if(newFlag)autoSendAlert();
+  }catch(e){}
+  saveStudent(student);
+}
+
+async function autoSendAlert(){
+  const cfg=getEmailCfg();
+  if(!cfg||!cfg.serviceId||!cfg.templateId||!cfg.publicKey){
+    console.warn('EmailJS not configured — alert not sent.');
+    return;
+  }
+  const reasons=[];
+  if(student.sentiment==='inappropriate')reasons.push('INAPPROPRIATE RESPONSE DETECTED');
+  if(student.learning==='attention_needed')reasons.push('AGENT ATTENTION NEEDED');
+  const lastMsg=(student.conversation||[]).filter(m=>m.role==='student').slice(-1)[0]?.text||'(none)';
+  try{
+    emailjs.init(cfg.publicKey);
+    await emailjs.send(cfg.serviceId, cfg.templateId, {
+      lecturer_name: 'L Nyanga',
+      lecturer_email: cfg.lecturerEmail||'nyangal@cput.ac.za',
+      student_name: student.name,
+      student_no: student.no,
+      flag_reason: reasons.join(' | '),
+      sentiment: student.sentiment,
+      learning_state: student.learning,
+      last_message: lastMsg,
+      message_count: String(student.messageCount||0),
+      date_time: new Date().toLocaleString('en-ZA'),
+      subject: '[ITF153X ALERT] Student requires attention — '+student.name+' ('+student.no+')'
+    });
+    console.log('Alert email sent successfully for student: '+student.no);
+  }catch(err){
+    console.error('EmailJS error:', err);
+  }
+}
+</script>
+</body>
+</html>
