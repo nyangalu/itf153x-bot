@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ITF153X Lecturer Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#f4f6fb;min-height:100vh;padding:14px;}
+.shell{width:100%;max-width:960px;margin:0 auto;background:#fff;border-radius:14px;box-shadow:0 2px 16px rgba(0,0,0,.10);overflow:hidden;}
+.hdr{background:#185FA5;padding:12px 20px;display:flex;align-items:center;gap:12px;}
+.hdr-av{width:36px;height:36px;border-radius:50%;background:#B5D4F4;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.hdr-t{font-size:15px;font-weight:700;color:#fff;}
+.hdr-s{font-size:11px;color:#B5D4F4;margin-top:1px;}
+.badge{background:#EAF3DE;color:#27500A;font-size:11px;padding:3px 10px;border-radius:20px;margin-left:auto;font-weight:700;}
+/* Setup */
+.setup{padding:28px 24px;display:none;flex-direction:column;align-items:center;gap:12px;}
+.setup.on{display:flex;}
+.setup-icon{font-size:38px;}
+.setup-h{font-size:15px;font-weight:700;color:#1a1a1a;}
+.setup-p{font-size:12px;color:#666;text-align:center;max-width:340px;line-height:1.6;}
+.sf{width:100%;max-width:360px;display:flex;flex-direction:column;gap:9px;}
+.lb{font-size:11px;color:#555;font-weight:700;display:block;margin-bottom:3px;}
+.fi{width:100%;border:1px solid #d0d5dd;border-radius:8px;padding:8px 11px;font-size:12px;color:#1a1a1a;outline:none;font-family:inherit;}
+.fi:focus{border-color:#185FA5;}
+.fi-mono{font-family:'Courier New',monospace;letter-spacing:.4px;}
+.info-b{background:#e6f1fb;border:1px solid #b5d4f4;border-radius:8px;padding:9px 12px;font-size:11px;color:#0c447c;line-height:1.6;}
+.info-y{background:#fffbea;border:1px solid #f0d080;border-radius:8px;padding:9px 12px;font-size:11px;color:#5a4500;line-height:1.6;}
+.info-g{background:#eaf3de;border:1px solid #c0dd97;border-radius:8px;padding:9px 12px;font-size:11px;color:#27500A;line-height:1.6;}
+.err{font-size:11px;color:#a32d2d;background:#fcebeb;border-radius:6px;padding:6px 10px;display:none;}
+.btn{background:#185FA5;color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn:hover{background:#0C447C;}
+.btn-sm{font-size:11px;padding:5px 12px;border-radius:7px;border:none;cursor:pointer;font-family:inherit;font-weight:700;}
+.btn-outline{background:transparent;color:#185FA5;border:1px solid #185FA5;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn-outline:hover{background:#e6f1fb;}
+/* Dash */
+.dash{padding:16px 20px;display:none;flex-direction:column;gap:12px;}
+.dash.on{display:flex;}
+.dash-hdr{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.dash-ttl{font-size:14px;font-weight:700;color:#1a1a1a;}
+.dash-sub{font-size:11px;color:#888;margin-top:2px;}
+.top-btns{display:flex;gap:6px;flex-wrap:wrap;}
+.rfsh{font-size:11px;padding:5px 12px;border-radius:7px;border:1px solid #d0d5dd;background:#fff;color:#555;cursor:pointer;font-family:inherit;}
+.rfsh:hover{background:#f0f4fa;border-color:#185FA5;color:#185FA5;}
+/* Email cfg */
+.ecfg{background:#f9fafb;border:1px solid #e5e9f2;border-radius:10px;padding:12px;display:none;flex-direction:column;gap:8px;margin-bottom:4px;}
+.ecfg.on{display:flex;}
+.ecfg-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.est{font-size:11px;padding:5px 9px;border-radius:6px;display:none;}
+.est.ok{background:#eaf3de;color:#27500A;display:block;}
+.est.err{background:#fcebeb;color:#791f1f;display:block;}
+/* Alert */
+.alert{background:#fff3cd;border:1.5px solid #e6a817;border-radius:10px;padding:11px 14px;display:none;flex-direction:column;gap:6px;}
+.alert.on{display:flex;}
+.alert-ttl{font-size:12px;font-weight:700;color:#7d4e00;}
+.alert-sub{font-size:11px;color:#7d4e00;}
+.alert-item{display:flex;align-items:center;justify-content:space-between;gap:6px;background:#fff;border:1px solid #f0d080;border-radius:7px;padding:7px 10px;flex-wrap:wrap;}
+/* Tabs */
+.tab-row{display:flex;border-bottom:2px solid #eef0f5;flex-wrap:wrap;}
+.tab{padding:8px 14px;font-size:11px;font-weight:700;color:#888;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;font-family:inherit;background:none;border-top:none;border-left:none;border-right:none;white-space:nowrap;}
+.tab.active{color:#185FA5;border-bottom-color:#185FA5;}
+.tab-panel{display:none;}
+.tab-panel.on{display:block;}
+/* Stats */
+.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:4px;}
+.sc{background:#f4f6fb;border-radius:10px;padding:10px 13px;}
+.sc-lbl{font-size:10px;color:#777;margin-bottom:3px;}
+.sc-val{font-size:22px;font-weight:700;color:#1a1a1a;}
+.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin-top:6px;}
+.cc{background:#fff;border:1px solid #e5e9f2;border-radius:10px;padding:12px;}
+.cc-ttl{font-size:11px;font-weight:700;color:#1a1a1a;margin-bottom:5px;}
+.pills{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;}
+.pill{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500;}
+/* Table */
+.tc{border:1px solid #e5e9f2;border-radius:10px;overflow-x:auto;margin-top:6px;}
+.tc-ttl{font-size:11px;font-weight:700;color:#1a1a1a;padding:10px 12px;border-bottom:1px solid #eef0f5;}
+.dt{width:100%;font-size:11px;border-collapse:collapse;min-width:560px;}
+.dt th{text-align:left;color:#888;font-weight:700;padding:7px 8px;border-bottom:2px solid #e5e9f2;white-space:nowrap;background:#f9fafb;}
+.dt td{padding:7px 8px;border-bottom:1px solid #f0f2f7;color:#1a1a1a;vertical-align:middle;}
+.dt tr:last-child td{border-bottom:none;}
+.dt tr:hover td{background:#f9fafb;}
+.dt tr.flagged td{background:#fffdf0;}
+/* Badges */
+.bdg{display:inline-block;font-size:10px;padding:2px 7px;border-radius:20px;font-weight:700;}
+.bp{background:#EAF3DE;color:#27500A;} .bn{background:#F1EFE8;color:#5F5E5A;} .bg{background:#FCEBEB;color:#791F1F;}
+.bc{background:#E6F1FB;color:#0C447C;} .bx{background:#FAEEDA;color:#633806;}
+.bi{background:#FF6B00;color:#fff;} .ba{background:#C0392B;color:#fff;}
+.blang{background:#E6F1FB;color:#0C447C;font-size:9px;}
+/* Conversations */
+.conv-card{border:1px solid #e5e9f2;border-radius:10px;overflow:hidden;margin-top:6px;}
+.conv-hdr{padding:10px 13px;background:#f9fafb;display:flex;align-items:center;gap:8px;cursor:pointer;}
+.conv-hdr:hover{background:#f0f4fa;}
+.conv-hdr.flagged-hdr{background:#fffdf0;border-left:4px solid #e6a817;}
+.conv-info{flex:1;}
+.conv-name{font-size:12px;font-weight:700;color:#1a1a1a;}
+.conv-meta{font-size:10px;color:#888;margin-top:1px;}
+.conv-body{display:none;flex-direction:column;gap:5px;padding:10px 13px;max-height:380px;overflow-y:auto;}
+.conv-body.open{display:flex;}
+.cm{display:flex;gap:5px;flex-direction:column;}
+.cm-row{display:flex;gap:5px;}
+.cm-row.u{flex-direction:row-reverse;}
+.cm-av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;margin-top:2px;}
+.cm-row.b .cm-av{background:#e6f1fb;} .cm-row.u .cm-av{background:#eaf3de;}
+.cm-wrap{max-width:80%;display:flex;flex-direction:column;gap:2px;}
+.cm-row.u .cm-wrap{align-items:flex-end;}
+.cm-bub{padding:5px 8px;border-radius:8px;font-size:11px;line-height:1.5;}
+.cm-row.b .cm-bub{background:#f3f5f8;color:#1a1a1a;} .cm-row.u .cm-bub{background:#185FA5;color:#fff;}
+.cm-meta{font-size:9px;color:#bbb;padding:0 2px;}
+.cm-en{background:#fffbea;border:1px solid #f0d080;border-radius:6px;padding:4px 8px;font-size:10px;color:#5a4500;margin-top:2px;line-height:1.5;}
+.cm-en-label{font-size:9px;color:#888;font-weight:700;margin-bottom:1px;}
+.tog-btn{font-size:10px;padding:2px 7px;border-radius:5px;border:1px solid #d0d5dd;background:#fff;color:#555;cursor:pointer;font-family:inherit;margin-top:2px;align-self:flex-start;}
+.tog-btn:hover{background:#f0f4fa;}
+.no-conv{text-align:center;padding:16px;color:#aaa;font-size:11px;}
+/* Topic analysis */
+.topic-panel{display:flex;flex-direction:column;gap:10px;margin-top:6px;}
+.topic-card{border:1px solid #e5e9f2;border-radius:10px;padding:12px;}
+.topic-card-ttl{font-size:11px;font-weight:700;color:#1a1a1a;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.topic-list{display:flex;flex-direction:column;gap:5px;}
+.topic-item{display:flex;align-items:center;gap:8px;font-size:11px;}
+.topic-bar-wrap{flex:1;height:8px;background:#eef0f5;border-radius:4px;overflow:hidden;}
+.topic-bar-fill{height:100%;border-radius:4px;}
+.topic-count{font-size:10px;color:#888;white-space:nowrap;min-width:24px;text-align:right;}
+.topic-name{min-width:80px;color:#1a1a1a;}
+.topic-loading{text-align:center;padding:24px;color:#888;font-size:12px;}
+.run-analysis-btn{background:#27500A;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;}
+.run-analysis-btn:hover{background:#173404;}
+/* Admin */
+.admin-panel{display:flex;flex-direction:column;gap:10px;margin-top:6px;}
+.admin-search{display:flex;gap:6px;}
+.admin-add-form{background:#f9fafb;border:1px solid #e5e9f2;border-radius:10px;padding:12px;display:none;flex-direction:column;gap:8px;}
+.admin-add-form.on{display:flex;}
+.admin-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.admin-table-wrap{border:1px solid #e5e9f2;border-radius:10px;overflow-x:auto;}
+.admin-status{font-size:11px;padding:5px 10px;border-radius:6px;display:none;}
+.admin-status.ok{background:#eaf3de;color:#27500A;display:block;}
+.admin-status.err{background:#fcebeb;color:#791f1f;display:block;}
+.empty{text-align:center;padding:24px;color:#aaa;font-size:12px;}
+.ts{color:#888;font-size:10px;}
+.note{background:#f0f4fa;border:1px solid #c5d5ea;border-radius:8px;padding:10px 13px;font-size:11px;color:#444;line-height:1.7;margin-top:4px;}
+.note strong{color:#185FA5;}
+.reset-link{font-size:11px;color:#888;text-align:center;cursor:pointer;text-decoration:underline;margin-top:4px;}
+.reset-link:hover{color:#a32d2d;}
+.view-btn{font-size:10px;padding:2px 7px;border-radius:5px;border:1px solid #185FA5;color:#185FA5;background:transparent;cursor:pointer;font-family:inherit;}
+.view-btn:hover{background:#e6f1fb;}
+.email-btn{font-size:10px;padding:2px 7px;border-radius:5px;border:1px solid #27500A;background:#eaf3de;color:#27500A;cursor:pointer;font-family:inherit;font-weight:700;}
+.email-btn:hover{background:#c0dd97;}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="hdr">
+    <div class="hdr-av">📊</div>
+    <div><div class="hdr-t">ITF153X Lecturer Dashboard</div><div class="hdr-s">Student engagement analytics · L Nyanga</div></div>
+    <div class="badge">🔒 Lecturer only</div>
+  </div>
+
+  <div class="setup" id="setup">
+    <div class="setup-icon">⚙️</div>
+    <div class="setup-h">Dashboard setup</div>
+    <div class="setup-p">Enter your API key and optional EmailJS settings to activate the dashboard.</div>
+    <div class="sf">
+      <div class="info-b" style="font-size:12px;font-weight:700;padding:7px 10px;"><span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:#185FA5;color:#fff;font-size:10px;font-weight:700;text-align:center;line-height:20px;margin-right:6px;">1</span>Anthropic API Key</div>
+      <div><label class="lb" for="apikey">API Key</label><input class="fi fi-mono" type="password" id="apikey" placeholder="sk-ant-..."></div>
+      <div class="info-y">🔒 Saved only on your browser. Never shared.</div>
+      <hr style="border:none;border-top:1px solid #eef0f5;margin:2px 0;">
+      <div class="info-b" style="font-size:12px;font-weight:700;padding:7px 10px;"><span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:#185FA5;color:#fff;font-size:10px;font-weight:700;text-align:center;line-height:20px;margin-right:6px;">2</span>EmailJS (optional — for automatic alerts)</div>
+      <div class="info-y">Get free credentials at <strong>emailjs.com</strong>. Template variables: {{subject}} {{student_name}} {{student_no}} {{flag_reason}} {{sentiment}} {{learning_state}} {{last_message}} {{message_count}} {{date_time}} {{lecturer_name}} {{lecturer_email}}</div>
+      <div class="ecfg-grid">
+        <div><label class="lb" for="ej-s">Service ID</label><input class="fi fi-mono" type="text" id="ej-s" placeholder="service_xxx"></div>
+        <div><label class="lb" for="ej-t">Template ID</label><input class="fi fi-mono" type="text" id="ej-t" placeholder="template_xxx"></div>
+        <div><label class="lb" for="ej-k">Public Key</label><input class="fi fi-mono" type="text" id="ej-k" placeholder="xxxxxxxxxxxx"></div>
+        <div><label class="lb" for="ej-e">Your email</label><input class="fi" type="email" id="ej-e" placeholder="nyangal@cput.ac.za" value="nyangal@cput.ac.za"></div>
+      </div>
+      <div class="info-g">✅ Leave EmailJS blank to skip — alerts can be configured later in ⚙ Email settings.</div>
+      <div class="err" id="setup-err">API key required — must start with <strong>sk-ant-</strong></div>
+      <button class="btn" onclick="saveSetup()" style="width:100%">Activate dashboard</button>
+    </div>
+  </div>
+
+  <div class="dash" id="dash">
+    <div class="dash-hdr">
+      <div><div class="dash-ttl">Student engagement overview</div><div class="dash-sub" id="last-upd">Loading…</div></div>
+      <div class="top-btns">
+        <button class="rfsh" onclick="toggleEcfg()">⚙ Email settings</button>
+        <button class="rfsh" onclick="loadDash()">↻ Refresh</button>
+      </div>
+    </div>
+
+    <!-- Email cfg collapsible -->
+    <div class="ecfg" id="ecfg">
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700;color:#1a1a1a;">EmailJS configuration <button class="btn-outline" onclick="toggleEcfg()" style="padding:4px 10px;font-size:11px;">Close</button></div>
+      <div class="ecfg-grid">
+        <div><label class="lb" for="c-s">Service ID</label><input class="fi fi-mono" type="text" id="c-s" placeholder="service_xxx"></div>
+        <div><label class="lb" for="c-t">Template ID</label><input class="fi fi-mono" type="text" id="c-t" placeholder="template_xxx"></div>
+        <div><label class="lb" for="c-k">Public Key</label><input class="fi fi-mono" type="text" id="c-k" placeholder="xxxxxxxxxxxx"></div>
+        <div><label class="lb" for="c-e">Lecturer email</label><input class="fi" type="email" id="c-e" placeholder="nyangal@cput.ac.za"></div>
+      </div>
+      <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;">
+        <button class="btn" onclick="saveEcfg()" style="padding:7px 14px;font-size:11px;">Save</button>
+        <button class="btn-outline" onclick="testEmail()" style="font-size:11px;padding:6px 12px;">Send test email</button>
+        <div class="est" id="est"></div>
+      </div>
+    </div>
+
+    <!-- Alert banner -->
+    <div class="alert" id="alert-banner">
+      <div class="alert-ttl">🚨 Students requiring immediate attention</div>
+      <div class="alert-sub" id="alert-sub"></div>
+      <div id="alert-list"></div>
+    </div>
+
+    <div class="tab-row">
+      <button class="tab active" onclick="switchTab('analytics',this)">📊 Analytics</button>
+      <button class="tab" onclick="switchTab('records',this)">📋 Records</button>
+      <button class="tab" onclick="switchTab('conversations',this)">💬 Conversations</button>
+      <button class="tab" onclick="switchTab('topics',this)">📚 Topic analysis</button>
+      <button class="tab" onclick="switchTab('admin',this)">⚙ Admin</button>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="tab-panel on" id="tab-analytics">
+      <div class="sg">
+        <div class="sc"><div class="sc-lbl">Total students</div><div class="sc-val" id="d-tot">—</div></div>
+        <div class="sc"><div class="sc-lbl">Total messages</div><div class="sc-val" id="d-msg">—</div></div>
+        <div class="sc"><div class="sc-lbl">Avg messages/student</div><div class="sc-val" id="d-avg">—</div></div>
+        <div class="sc"><div class="sc-lbl">Languages detected</div><div class="sc-val" id="d-lang">—</div></div>
+      </div>
+      <div class="charts">
+        <div class="cc"><div class="cc-ttl">Sentiment distribution</div><div class="pills" id="sp"></div><div style="height:110px;position:relative"><canvas id="sc"></canvas></div></div>
+        <div class="cc"><div class="cc-ttl">Learning state</div><div class="pills" id="lp"></div><div style="height:110px;position:relative"><canvas id="lc"></canvas></div></div>
+      </div>
+    </div>
+
+    <!-- RECORDS -->
+    <div class="tab-panel" id="tab-records">
+      <div class="tc">
+        <div class="tc-ttl">Individual student records</div>
+        <table class="dt">
+          <thead><tr><th>Student no.</th><th>Name</th><th>Msgs</th><th>Language</th><th>Sentiment</th><th>Learning</th><th>Last active</th><th>Action</th></tr></thead>
+          <tbody id="stbl"><tr><td colspan="8" class="empty">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CONVERSATIONS -->
+    <div class="tab-panel" id="tab-conversations">
+      <div class="info-b" style="margin-top:6px;font-size:11px;">💡 Non-English conversations show a <strong>🌐 Translation</strong> toggle to reveal the English translation of each message alongside the original.</div>
+      <div id="conv-panel"><div class="empty">No conversations yet.</div></div>
+    </div>
+
+    <!-- TOPIC ANALYSIS -->
+    <div class="tab-panel" id="tab-topics">
+      <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;">
+        <button class="run-analysis-btn" onclick="runTopicAnalysis()">🔍 Run topic analysis</button>
+        <span style="font-size:11px;color:#888;">Uses AI to analyse all conversations in real time</span>
+      </div>
+      <div id="topic-results" class="topic-panel" style="margin-top:10px;"><div class="topic-loading">Click "Run topic analysis" to generate a real-time summary of student topics.</div></div>
+    </div>
+
+    <!-- ADMIN -->
+    <div class="tab-panel" id="tab-admin">
+      <div class="admin-panel">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:4px;">
+          <div style="font-size:12px;font-weight:700;color:#1a1a1a;">Student register management</div>
+          <button class="btn" onclick="toggleAddForm()" style="padding:7px 14px;font-size:11px;">+ Add student</button>
+        </div>
+        <div class="info-b" style="font-size:11px;">Admin overrides take priority over the uploaded class list. Add students who joined late, remove those who withdrew, or edit registration status at any time.</div>
+
+        <!-- Add/Edit form -->
+        <div class="admin-add-form" id="add-form">
+          <div style="font-size:12px;font-weight:700;color:#1a1a1a;" id="form-title">Add new student</div>
+          <div class="admin-form-grid">
+            <div><label class="lb" for="a-no">Student number *</label><input class="fi" type="text" id="a-no" placeholder="e.g. 251234567"></div>
+            <div><label class="lb" for="a-sur">Surname *</label><input class="fi" type="text" id="a-sur" placeholder="e.g. DLAMINI"></div>
+            <div><label class="lb" for="a-ini">Initial</label><input class="fi" type="text" id="a-ini" placeholder="e.g. TM"></div>
+            <div><label class="lb" for="a-stat">Status *</label>
+              <select class="fi" id="a-stat"><option value="Registered">Registered</option><option value="Not Registered">Not Registered</option></select>
+            </div>
+          </div>
+          <div class="admin-status" id="admin-status"></div>
+          <div style="display:flex;gap:7px;">
+            <button class="btn" onclick="saveAdminStudent()" style="padding:8px 16px;font-size:12px;">Save</button>
+            <button class="btn-outline" onclick="toggleAddForm()" style="font-size:12px;">Cancel</button>
+          </div>
+        </div>
+
+        <!-- Search -->
+        <div class="admin-search">
+          <input class="fi" type="text" id="admin-search" placeholder="Search by student number or surname…" oninput="renderAdminTable()">
+        </div>
+
+        <div class="admin-table-wrap">
+          <table class="dt" style="min-width:420px;">
+            <thead><tr><th>Student no.</th><th>Surname</th><th>Initial</th><th>Status</th><th>Source</th><th>Actions</th></tr></thead>
+            <tbody id="admin-tbl"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="note"><strong>📌 Data sharing:</strong> Student data is stored in localStorage on the same browser. Host both files on the same domain (e.g. GitHub Pages) for shared access.<br><strong>📧 Email alerts:</strong> Sent automatically when a student is flagged as Inappropriate or Attention Needed.</div>
+    <div class="reset-link" onclick="resetAll()">Reset API key &amp; settings</div>
+  </div>
+</div>
+
+<script>
+const SK='itf153x_v6', KK='itf153x_apikey', EK='itf153x_emailjs', AK='itf153x_admin_students';
+let charts={}, allStudents=[], editingNo=null;
+
+const BASE_STUDENTS = {
+  "250714353":{"surname":"BOKABA","initial":"KM","status":"Registered"},
+  "241073995":{"surname":"CAMAGWINI","initial":"YY","status":"Registered"},
+  "250522292":{"surname":"DAWETI","initial":"A","status":"Registered"},
+  "240895649":{"surname":"HLATSHWAYO","initial":"JHS","status":"Registered"},
+  "221152326":{"surname":"JWAQA","initial":"A","status":"Registered"},
+  "251520536":{"surname":"KEKANA","initial":"TH","status":"Registered"},
+  "250336944":{"surname":"KHANYILE","initial":"LS","status":"Registered"},
+  "251289125":{"surname":"KILASI","initial":"M","status":"Not Registered"},
+  "230011098":{"surname":"LUKHELE","initial":"NP","status":"Registered"},
+  "250826968":{"surname":"MAHLARE","initial":"ML","status":"Registered"},
+  "250643499":{"surname":"MALULEKA","initial":"OM","status":"Registered"},
+  "251331261":{"surname":"MASHABELA","initial":"KIM","status":"Registered"},
+  "250580705":{"surname":"MASHELE","initial":"NW","status":"Registered"},
+  "240045114":{"surname":"MATHEVULA","initial":"S","status":"Registered"},
+  "240029674":{"surname":"MATINKETJA","initial":"T","status":"Registered"},
+  "240824407":{"surname":"MATYALANA","initial":"M","status":"Registered"},
+  "250412462":{"surname":"MGOBIYANE","initial":"KM","status":"Registered"},
+  "251390136":{"surname":"MHLABENI","initial":"A","status":"Registered"},
+  "251450805":{"surname":"MHLUNGU","initial":"AA","status":"Registered"},
+  "251706753":{"surname":"MLAMBO","initial":"L","status":"Registered"},
+  "241459338":{"surname":"MLOKOTI","initial":"IM","status":"Not Registered"},
+  "240567153":{"surname":"MOJAPELO","initial":"MLM","status":"Registered"},
+  "250036398":{"surname":"MOKHUDWANA","initial":"F","status":"Registered"},
+  "250601001":{"surname":"MOREMI","initial":"TM","status":"Registered"},
+  "250110334":{"surname":"MOSHAOA","initial":"K","status":"Registered"},
+  "230557155":{"surname":"MOTHUSI","initial":"OT","status":"Not Registered"},
+  "240200268":{"surname":"MPHAFA","initial":"TK","status":"Registered"},
+  "250961377":{"surname":"MSITHINI","initial":"","status":"Registered"},
+  "250988836":{"surname":"MUDAU","initial":"MT","status":"Registered"},
+  "250760959":{"surname":"NDOU","initial":"A","status":"Registered"},
+  "231254857":{"surname":"NGOBENI","initial":"T","status":"Registered"},
+  "251394492":{"surname":"NGUBANE","initial":"ST","status":"Registered"},
+  "251412164":{"surname":"NGXOKO","initial":"ON","status":"Registered"},
+  "251592227":{"surname":"NHLAPO","initial":"WT","status":"Registered"},
+  "250120739":{"surname":"NKONWANA","initial":"B","status":"Registered"},
+  "250378329":{"surname":"NKONYANE","initial":"ZU","status":"Registered"},
+  "250022303":{"surname":"NTIMBANI","initial":"MNN","status":"Registered"},
+  "250310007":{"surname":"NTLABA","initial":"S","status":"Registered"},
+  "250670003":{"surname":"NTOZINI","initial":"E","status":"Registered"},
+  "251588491":{"surname":"NTSARA","initial":"TM","status":"Registered"},
+  "240168178":{"surname":"NZIMANDE","initial":"SN","status":"Registered"},
+  "240248104":{"surname":"PHOLOHOLO","initial":"KZ","status":"Registered"},
+  "251585328":{"surname":"PHUNGULA","initial":"TZ","status":"Registered"},
+  "250070413":{"surname":"PILUSA","initial":"TM","status":"Registered"},
+  "250044641":{"surname":"RAMARU","initial":"KL","status":"Registered"},
+  "251367452":{"surname":"SANYAKA","initial":"LS","status":"Registered"},
+  "251699633":{"surname":"SHABANGU","initial":"M","status":"Registered"},
+  "251583422":{"surname":"SHIKWAMBANA","initial":"KH","status":"Registered"},
+  "251082326":{"surname":"SHONGWE","initial":"NN","status":"Registered"}
+};
+
+function getKey(){return localStorage.getItem(KK)||'';}
+function getEcfg(){try{return JSON.parse(localStorage.getItem(EK)||'null');}catch(e){return null;}}
+function getAdmin(){try{return JSON.parse(localStorage.getItem(AK)||'{}')}catch(e){return{};}}
+function saveAdmin(a){localStorage.setItem(AK,JSON.stringify(a));}
+function loadAll(){try{return JSON.parse(localStorage.getItem(SK)||'[]');}catch(e){return[];}}
+
+function saveSetup(){
+  const k=document.getElementById('apikey').value.trim();
+  if(!k.startsWith('sk-ant-')){document.getElementById('setup-err').style.display='block';return;}
+  localStorage.setItem(KK,k);
+  saveEcfgFrom('ej-s','ej-t','ej-k','ej-e');
+  init();
+}
+function saveEcfg(){saveEcfgFrom('c-s','c-t','c-k','c-e');const s=document.getElementById('est');s.textContent='✅ Saved.';s.className='est ok';setTimeout(()=>s.className='est',3000);}
+function saveEcfgFrom(si,ti,ki,ei){
+  const cfg={serviceId:document.getElementById(si).value.trim(),templateId:document.getElementById(ti).value.trim(),publicKey:document.getElementById(ki).value.trim(),lecturerEmail:document.getElementById(ei).value.trim()};
+  if(cfg.serviceId&&cfg.templateId&&cfg.publicKey)localStorage.setItem(EK,JSON.stringify(cfg));
+}
+function loadEcfgIntoPanel(){const cfg=getEcfg();if(!cfg)return;['c-s','c-t','c-k','c-e'].forEach((id,i)=>{const v=[cfg.serviceId,cfg.templateId,cfg.publicKey,cfg.lecturerEmail][i]||'';document.getElementById(id).value=v;});}
+function toggleEcfg(){const p=document.getElementById('ecfg');const on=p.classList.toggle('on');if(on)loadEcfgIntoPanel();}
+function resetAll(){if(confirm('Reset all settings?')){[KK,EK].forEach(k=>localStorage.removeItem(k));document.getElementById('dash').className='dash';document.getElementById('setup').className='setup on';}}
+
+async function testEmail(){
+  const cfg=getEcfg(),s=document.getElementById('est');
+  if(!cfg?.serviceId){s.textContent='⚠ Save EmailJS settings first.';s.className='est err';return;}
+  s.textContent='Sending…';s.className='est ok';
+  try{emailjs.init(cfg.publicKey);await emailjs.send(cfg.serviceId,cfg.templateId,{lecturer_name:'L Nyanga',lecturer_email:cfg.lecturerEmail,student_name:'Test Student',student_no:'000000000',flag_reason:'TEST — configuration check',sentiment:'neutral',learning_state:'neutral',last_message:'Test message',message_count:'0',date_time:new Date().toLocaleString('en-ZA'),subject:'[ITF153X] Test email'});s.textContent='✅ Test email sent! Check inbox.';s.className='est ok';}
+  catch(err){s.textContent='❌ Failed: '+(err.text||JSON.stringify(err));s.className='est err';}
+}
+
+async function sendAlertEmail(st){
+  const cfg=getEcfg();if(!cfg?.serviceId)return;
+  const reasons=[];
+  if(st.sentiment==='inappropriate')reasons.push('INAPPROPRIATE RESPONSE');
+  if(st.learning==='attention_needed')reasons.push('AGENT ATTENTION NEEDED');
+  const last=(st.conversation||[]).filter(m=>m.role==='student').slice(-1)[0]?.text||'(none)';
+  try{emailjs.init(cfg.publicKey);await emailjs.send(cfg.serviceId,cfg.templateId,{lecturer_name:'L Nyanga',lecturer_email:cfg.lecturerEmail||'nyangal@cput.ac.za',student_name:st.name,student_no:st.no,flag_reason:reasons.join(' | '),sentiment:st.sentiment,learning_state:st.learning,last_message:last,message_count:String(st.messageCount||0),date_time:new Date().toLocaleString('en-ZA'),subject:'[ITF153X ALERT] '+st.name+' ('+st.no+')'});}
+  catch(e){console.error('Email err:',e);}
+}
+
+function sBdg(s){const m={positive:['bp','✔ Positive'],neutral:['bn','– Neutral'],negative:['bg','✖ Negative'],inappropriate:['bi','⚠ Inappropriate']};const[c,l]=m[s]||m.neutral;return'<span class="bdg '+c+'">'+l+'</span>';}
+function lBdg(l){const m={curious:['bc','🔍 Curious'],neutral:['bn','– Neutral'],confused:['bx','? Confused'],attention_needed:['ba','🚨 Attention Needed']};const[c,lb]=m[l]||m.neutral;return'<span class="bdg '+c+'">'+lb+'</span>';}
+function langBdg(l){if(!l||l==='English')return'';return'<span class="bdg blang">🌐 '+l+'</span>';}
+function fdt(iso){if(!iso)return'—';const d=new Date(iso);return d.toLocaleDateString('en-ZA',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('en-ZA',{hour:'2-digit',minute:'2-digit'});}
+function ftm(iso){if(!iso)return'';return new Date(iso).toLocaleTimeString('en-ZA',{hour:'2-digit',minute:'2-digit'});}
+function isFlagged(s){return s.sentiment==='inappropriate'||s.learning==='attention_needed';}
+
+function switchTab(id,el){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('on'));el.classList.add('active');document.getElementById('tab-'+id).classList.add('on');if(id==='admin')renderAdminTable();}
+
+function mkChart(id,key,labels,data,bgs,borders){
+  const el=document.getElementById(id);if(!el||typeof Chart==='undefined')return;
+  if(charts[key])charts[key].destroy();
+  charts[key]=new Chart(el.getContext('2d'),{type:'bar',data:{labels,datasets:[{data,backgroundColor:bgs,borderColor:borders,borderWidth:1,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(28,28,28,.9)',cornerRadius:5,padding:8}},scales:{y:{beginAtZero:true,ticks:{stepSize:1,font:{size:9},color:'#888'},grid:{color:'rgba(0,0,0,.05)'},border:{display:false}},x:{ticks:{font:{size:10},color:'#888'},grid:{display:false},border:{display:false}}}}});
+}
+
+function loadDash(){
+  allStudents=loadAll();
+  const tot=allStudents.length,totM=allStudents.reduce((s,x)=>s+(x.messageCount||0),0);
+  const avg=tot?(totM/tot).toFixed(1):'0';
+  const sc={positive:0,neutral:0,negative:0,inappropriate:0};
+  const lc={curious:0,neutral:0,confused:0,attention_needed:0};
+  const langs=new Set();
+  allStudents.forEach(s=>{
+    sc[s.sentiment||'neutral']=(sc[s.sentiment||'neutral']||0)+1;
+    lc[s.learning||'neutral']=(lc[s.learning||'neutral']||0)+1;
+    if(s.language&&s.language!=='English')langs.add(s.language);
+  });
+  document.getElementById('d-tot').textContent=tot;
+  document.getElementById('d-msg').textContent=totM;
+  document.getElementById('d-avg').textContent=avg;
+  document.getElementById('d-lang').textContent=langs.size||'—';
+  document.getElementById('last-upd').textContent='Refreshed: '+new Date().toLocaleTimeString('en-ZA',{hour:'2-digit',minute:'2-digit'});
+
+  document.getElementById('sp').innerHTML='<span class="pill bp">Positive: '+sc.positive+'</span><span class="pill bn">Neutral: '+sc.neutral+'</span><span class="pill bg">Negative: '+sc.negative+'</span><span class="pill" style="background:#FF6B00;color:#fff">Inappropriate: '+sc.inappropriate+'</span>';
+  document.getElementById('lp').innerHTML='<span class="pill bc">Curious: '+lc.curious+'</span><span class="pill bn">Neutral: '+lc.neutral+'</span><span class="pill bx">Confused: '+lc.confused+'</span><span class="pill" style="background:#C0392B;color:#fff">Attention Needed: '+lc.attention_needed+'</span>';
+
+  mkChart('sc','sent',['Positive','Neutral','Negative','Inappropriate'],[sc.positive,sc.neutral,sc.negative,sc.inappropriate],['#C0DD97','#D3D1C7','#F09595','#FF6B00'],['#3B6D11','#5F5E5A','#A32D2D','#B34E00']);
+  mkChart('lc','learn',['Curious','Neutral','Confused','Attn Needed'],[lc.curious,lc.neutral,lc.confused,lc.attention_needed],['#B5D4F4','#D3D1C7','#FAC775','#C0392B'],['#185FA5','#5F5E5A','#BA7517','#922B21']);
+
+  // Alert banner
+  const flagged=allStudents.filter(isFlagged);
+  const banner=document.getElementById('alert-banner');
+  if(flagged.length){
+    banner.classList.add('on');
+    const cfg=getEcfg();const emailOn=cfg?.serviceId;
+    document.getElementById('alert-sub').textContent=emailOn?'Alert emails have been automatically sent to '+cfg.lecturerEmail+'.':'⚠ Configure EmailJS in ⚙ Email settings to enable automatic alerts.';
+    document.getElementById('alert-list').innerHTML=flagged.map(s=>{
+      const rs=[];if(s.sentiment==='inappropriate')rs.push('<span class="bdg bi">⚠ Inappropriate</span>');if(s.learning==='attention_needed')rs.push('<span class="bdg ba">🚨 Attention Needed</span>');
+      return '<div class="alert-item"><div><div style="font-size:11px;font-weight:700">'+s.name+' <span class="ts">· '+s.no+'</span></div><div style="display:flex;gap:4px;margin-top:3px">'+rs.join('')+'</div></div><div style="display:flex;gap:5px"><button class="view-btn" onclick="jumpToConv(\''+s.no+'\')">View chat</button>'+(emailOn?'<button class="email-btn" onclick="sendAlertEmail(allStudents.find(x=>x.no===\''+s.no+'\'))">✉ Resend</button>':'')+'</div></div>';
+    }).join('');
+  } else banner.classList.remove('on');
+
+  // Records table
+  const tbody=document.getElementById('stbl');
+  tbody.innerHTML=allStudents.length?[...allStudents].sort((a,b)=>(b.messageCount||0)-(a.messageCount||0)).map(s=>'<tr class="'+(isFlagged(s)?'flagged':'')+'"><td class="ts">'+s.no+'</td><td><strong>'+s.name+'</strong></td><td style="text-align:center;font-weight:700">'+(s.messageCount||0)+'</td><td>'+langBdg(s.language||'English')+(s.language&&s.language!=='English'?'':'<span class="ts">English</span>')+'</td><td>'+sBdg(s.sentiment||'neutral')+'</td><td>'+lBdg(s.learning||'neutral')+'</td><td class="ts" style="white-space:nowrap">'+fdt(s.lastActive)+'</td><td><button class="view-btn" onclick="jumpToConv(\''+s.no+'\')">View chat</button></td></tr>').join(''):'<tr><td colspan="8" class="empty">No student data yet.</td></tr>';
+
+  // Conversations
+  renderConversations();
+}
+
+function renderConversations(){
+  const panel=document.getElementById('conv-panel');
+  if(!allStudents.length){panel.innerHTML='<div class="empty">No student data yet.</div>';return;}
+  panel.innerHTML=[...allStudents].sort((a,b)=>(b.messageCount||0)-(a.messageCount||0)).map(s=>{
+    const conv=s.conversation||[];const flag=isFlagged(s);const mc=s.messageCount||0;
+    const hasNonEn=(s.language&&s.language!=='English')||conv.some(m=>m.lang&&m.lang!=='English'&&m.lang!=='');
+    const msgs=conv.map((m,idx)=>{
+      const isS=m.role==='student',role=isS?'u':'b',av=isS?'👤':'🎓';
+      const safe=(m.text||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const hasTranslation=m.enText&&m.enText.trim()&&m.lang&&m.lang!=='English';
+      const enBlock=hasTranslation?'<div class="cm-en" id="en-'+s.no+'-'+idx+'" style="display:none"><div class="cm-en-label">🌐 English translation:</div>'+(m.enText||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>':'';
+      const togBtn=hasTranslation?'<button class="tog-btn" onclick="toggleTranslation(\''+s.no+'\','+idx+',this)">🌐 Show translation</button>':'';
+      return '<div class="cm"><div class="cm-row '+role+'"><div class="cm-av">'+av+'</div><div class="cm-wrap"><div class="cm-bub">'+safe+'</div><div class="cm-meta">'+ftm(m.time)+(m.topic?' · '+m.topic:'')+(m.lang&&m.lang!=='English'?' · <em>'+m.lang+'</em>':'')+'</div>'+togBtn+'</div></div>'+enBlock+'</div>';
+    }).join('');
+    return '<div class="conv-card" id="conv-'+s.no+'"><div class="conv-hdr'+(flag?' flagged-hdr':'')+'" onclick="toggleConv(\''+s.no+'\')"><div class="conv-info"><div class="conv-name">'+s.name+' <span class="ts">· '+s.no+'</span>'+(hasNonEn?' <span class="bdg blang">🌐 '+( s.language||'multilingual')+'</span>':'')+'</div><div class="conv-meta">'+mc+' message'+(mc!==1?'s':'')+' · '+fdt(s.lastActive)+'</div></div><div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">'+sBdg(s.sentiment||'neutral')+' '+lBdg(s.learning||'neutral')+'</div><div style="font-size:14px;color:#888;transition:transform .2s" id="tog-'+s.no+'">▶</div></div><div class="conv-body" id="body-'+s.no+'">'+(msgs||'<div class="no-conv">No messages recorded.</div>')+'</div></div>';
+  }).join('');
+}
+
+function toggleTranslation(no,idx,btn){
+  const el=document.getElementById('en-'+no+'-'+idx);
+  if(!el)return;
+  const visible=el.style.display!=='none';
+  el.style.display=visible?'none':'block';
+  btn.textContent=visible?'🌐 Show translation':'🌐 Hide translation';
+}
+
+function toggleConv(no){const b=document.getElementById('body-'+no),t=document.getElementById('tog-'+no);const open=b.classList.toggle('open');if(t)t.style.transform=open?'rotate(90deg)':'';}
+function jumpToConv(no){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('on'));document.querySelector('[onclick*="conversations"]').classList.add('active');document.getElementById('tab-conversations').classList.add('on');setTimeout(()=>{const b=document.getElementById('body-'+no),t=document.getElementById('tog-'+no);if(b&&!b.classList.contains('open')){b.classList.add('open');if(t)t.style.transform='rotate(90deg)';}document.getElementById('conv-'+no)?.scrollIntoView({behavior:'smooth',block:'start'});},100);}
+
+/* ── TOPIC ANALYSIS ── */
+async function runTopicAnalysis(){
+  const el=document.getElementById('topic-results');
+  el.innerHTML='<div class="topic-loading">🔍 Analysing all conversations… This may take a moment.</div>';
+  if(!allStudents.length){el.innerHTML='<div class="topic-loading">No student data yet.</div>';return;}
+  const convSummary=allStudents.map(s=>'Student: '+s.name+' ('+s.no+')\n'+( s.conversation||[]).filter(m=>m.role==='student').map(m=>'Q['+m.topic+']: '+m.text+(m.enText?' [EN: '+m.enText+']':'')).join('\n')).join('\n\n');
+  const prompt=`You are analyzing ITF153X student chatbot conversations. Based on the conversations below, return ONLY valid JSON (no markdown):
+{
+  "frequently_asked": [{"topic": "string", "subtopic": "string", "count": number, "example": "short example question"}],
+  "struggling": [{"topic": "string", "reason": "string", "studentCount": number}],
+  "good_comprehension": [{"topic": "string", "evidence": "string", "studentCount": number}],
+  "language_breakdown": {"English": number, "isiXhosa": number, "Afrikaans": number, "other": number},
+  "overall_summary": "2-3 sentence plain text summary for the lecturer"
+}
+Conversations:\n`+convSummary.substring(0,6000);
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':getKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1200,messages:[{role:'user',content:prompt}]})});
+    const data=await res.json();
+    const txt=(data.content||[]).map(b=>b.text||'').join('').trim().replace(/```json|```/g,'').trim();
+    const p=JSON.parse(txt);
+    renderTopicResults(p);
+  }catch(e){el.innerHTML='<div class="topic-loading">⚠ Analysis failed. Check your API key and try again.</div>';}
+}
+
+function renderTopicResults(p){
+  const el=document.getElementById('topic-results');
+  const maxFreq=Math.max(...(p.frequently_asked||[]).map(x=>x.count),1);
+  const maxStr=Math.max(...(p.struggling||[]).map(x=>x.studentCount),1);
+  const maxGood=Math.max(...(p.good_comprehension||[]).map(x=>x.studentCount),1);
+  el.innerHTML=
+    '<div class="topic-card"><div class="topic-card-ttl">📌 Overall summary</div><div style="font-size:12px;color:#444;line-height:1.65">'+(p.overall_summary||'No summary.')+'</div></div>'+
+    '<div class="topic-card"><div class="topic-card-ttl" style="color:#185FA5">🔥 Most frequently asked topics</div><div class="topic-list">'+
+    (p.frequently_asked||[]).slice(0,8).map(t=>'<div class="topic-item"><div class="topic-name">'+t.topic+(t.subtopic?'<br><span class="ts">'+t.subtopic+'</span>':'')+'</div><div class="topic-bar-wrap"><div class="topic-bar-fill" style="width:'+Math.round(t.count/maxFreq*100)+'%;background:#185FA5"></div></div><div class="topic-count">'+t.count+'×</div></div>').join('')+
+    '</div></div>'+
+    '<div class="topic-card"><div class="topic-card-ttl" style="color:#C0392B">⚠ Topics students are struggling with</div><div class="topic-list">'+
+    (p.struggling||[]).slice(0,8).map(t=>'<div class="topic-item"><div class="topic-name">'+t.topic+'<br><span class="ts">'+t.reason+'</span></div><div class="topic-bar-wrap"><div class="topic-bar-fill" style="width:'+Math.round(t.studentCount/maxStr*100)+'%;background:#C0392B"></div></div><div class="topic-count">'+t.studentCount+' students</div></div>').join('')+
+    '</div></div>'+
+    '<div class="topic-card"><div class="topic-card-ttl" style="color:#27500A">✅ Topics with good comprehension</div><div class="topic-list">'+
+    (p.good_comprehension||[]).slice(0,8).map(t=>'<div class="topic-item"><div class="topic-name">'+t.topic+'<br><span class="ts">'+t.evidence+'</span></div><div class="topic-bar-wrap"><div class="topic-bar-fill" style="width:'+Math.round(t.studentCount/maxGood*100)+'%;background:#27500A"></div></div><div class="topic-count">'+t.studentCount+' students</div></div>').join('')+
+    '</div></div>'+
+    (p.language_breakdown?'<div class="topic-card"><div class="topic-card-ttl">🌍 Language breakdown</div><div style="display:flex;gap:6px;flex-wrap:wrap">'+Object.entries(p.language_breakdown).map(([l,n])=>'<span class="bdg blang">'+l+': '+n+'</span>').join('')+'</div></div>':'');
+}
+
+/* ── ADMIN PANEL ── */
+function mergeStudents(){
+  const admin=getAdmin();
+  const merged={...BASE_STUDENTS};
+  Object.entries(admin).forEach(([no,rec])=>{merged[no]={...rec,_admin:true};});
+  return merged;
+}
+
+function renderAdminTable(){
+  const q=(document.getElementById('admin-search').value||'').toLowerCase();
+  const all=mergeStudents();
+  const tbody=document.getElementById('admin-tbl');
+  const rows=Object.entries(all).filter(([no,r])=>!q||(no.includes(q)||(r.surname||'').toLowerCase().includes(q)));
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="6" class="empty">No students found.</td></tr>';return;}
+  tbody.innerHTML=rows.sort((a,b)=>a[1].surname.localeCompare(b[1].surname)).map(([no,r])=>'<tr><td class="ts">'+no+'</td><td>'+r.surname+'</td><td>'+(r.initial||'—')+'</td><td>'+( r.status==='Registered'?'<span class="bdg bp">Registered</span>':'<span class="bdg bg">Not Registered</span>')+'</td><td><span class="bdg '+(r._admin?'bc">Admin':'bn">Base')+'</span></td><td style="display:flex;gap:4px;"><button class="view-btn" onclick="editStudent(\''+no+'\')">✏ Edit</button><button class="view-btn" style="border-color:#C0392B;color:#C0392B" onclick="removeStudent(\''+no+'\')">✕ Remove</button></td></tr>').join('');
+}
+
+function toggleAddForm(){
+  const f=document.getElementById('add-form');
+  const on=f.classList.toggle('on');
+  if(!on){editingNo=null;['a-no','a-sur','a-ini'].forEach(id=>document.getElementById(id).value='');document.getElementById('a-stat').value='Registered';document.getElementById('form-title').textContent='Add new student';}
+}
+
+function editStudent(no){
+  const all=mergeStudents();const rec=all[no];if(!rec)return;
+  editingNo=no;
+  document.getElementById('a-no').value=no;document.getElementById('a-no').disabled=true;
+  document.getElementById('a-sur').value=rec.surname||'';
+  document.getElementById('a-ini').value=rec.initial||'';
+  document.getElementById('a-stat').value=rec.status||'Registered';
+  document.getElementById('form-title').textContent='Edit student: '+no;
+  document.getElementById('add-form').classList.add('on');
+}
+
+function saveAdminStudent(){
+  const no=document.getElementById('a-no').value.trim();
+  const sur=document.getElementById('a-sur').value.trim().toUpperCase();
+  const ini=document.getElementById('a-ini').value.trim().toUpperCase();
+  const stat=document.getElementById('a-stat').value;
+  const st=document.getElementById('admin-status');
+  if(!no||!sur){st.textContent='Student number and surname are required.';st.className='admin-status err';return;}
+  const admin=getAdmin();
+  admin[no]={surname:sur,initial:ini,status:stat};
+  saveAdmin(admin);
+  st.textContent='✅ Student saved: '+no;st.className='admin-status ok';
+  document.getElementById('a-no').disabled=false;editingNo=null;
+  setTimeout(()=>{st.className='admin-status';toggleAddForm();renderAdminTable();},1200);
+}
+
+function removeStudent(no){
+  if(!confirm('Remove admin override for '+no+'? (Base list entry is not affected)'))return;
+  const admin=getAdmin();delete admin[no];saveAdmin(admin);renderAdminTable();
+}
+
+function init(){document.getElementById('setup').className='setup';document.getElementById('dash').className='dash on';loadDash();}
+window.onload=function(){if(getKey()){init();}else{document.getElementById('setup').className='setup on';}};
+</script>
+</body>
+</html>
